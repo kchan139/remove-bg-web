@@ -1,4 +1,4 @@
-# rmbg - Remove Image Background Web App
+# Remove Image Background Web App
 
 A simple web application to remove the background from images using the `rembg` library.
 
@@ -6,4 +6,4 @@ A simple web application to remove the background from images using the `rembg` 
 
 You can try the live demo of the application at:
 
-[rmbg Web App](https://rmbg-816798149971.us-central1.run.app)
+[Remove Background App](https://rmbg-816798149971.us-central1.run.app)
