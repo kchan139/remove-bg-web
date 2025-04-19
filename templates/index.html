@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>✂️- Remove Image Background</title>
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #f4f4f4;
+            font-family: sans-serif;
+        }
+
+        .drop-zone {
+            border: 4px dashed #ccc;
+            padding: 40px;
+            width: 80vw;
+            max-width: 600px;
+            height: 60vh;
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .drop-zone.dragover {
+            background-color: #e0e0e0;
+            border-color: #999;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        label {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        label:hover {
+            background-color: #0056b3;
+        }
+
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #1e7e34;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="dropZone" class="drop-zone">
+        <h1>✂️ Remove Background</h1>
+        <p>Drag and drop an image here or click to select a file.</p>
+        <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+            <input id="fileInput" type="file" name="file">
+            <label for="fileInput">Choose File</label>
+            <button type="submit">Remove Background</button>
+        </form>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        let dropZone = document.getElementById("dropZone");
+        let fileInput = document.getElementById("fileInput");
+        let uploadForm = document.getElementById("uploadForm");
+        let label = document.querySelector('label[for="fileInput"]');
+        let paragraph = document.querySelector('.drop-zone > p');
+
+        dropZone.addEventListener("click", function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                uploadForm.submit();
+            }
+        });
+
+        dropZone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            this.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", function (e) {
+            this.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove("dragover");
+
+            let file = e.dataTransfer.files[0];
+            fileInput.files = e.dataTransfer.files;
+            uploadForm.submit();
+        });
+    </script>
+</body>
+</html>

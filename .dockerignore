@@ -1,0 +1,14 @@
+# Exclude Python bytecode and cache files
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Exclude virtual environment directories
+env/
+venv/
+
+# Exclude OS-specific files
+.DS_Store
+
+# Exclude .git files
+.git*
