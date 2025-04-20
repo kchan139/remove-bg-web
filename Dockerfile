@@ -1,8 +1,10 @@
 FROM python:3.12
 
-COPY u2net.onnx /home/.u2net/u2net.onnx
-
 WORKDIR /app
+
+RUN mkdir -p /home/.u2net
+
+RUN wget -O /home/.u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx
 
 COPY requirements.txt .
 
