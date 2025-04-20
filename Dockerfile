@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8080
+EXPOSE 5000
 
 CMD [ "python", "app.py" ]
+# CMD [ "python", "-m", "pytest", "test/", "-v" ]
