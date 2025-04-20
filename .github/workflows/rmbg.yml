@@ -28,13 +28,32 @@ jobs:
     
     - name: Test Docker image
       run: |
+        docker rm -f test-container || true
+        
         docker run -d -p 5000:5000 --name test-container rmbg
-        sleep 30
-        docker logs test-container
+        echo "Waiting for application to start..."
+        timeout=60 # Maximum wait time in seconds
+        interval=2 # Check every 2 seconds
+        elapsed=0
+        while ! curl -sf http://localhost:5000 > /dev/null; do
+          if [ $elapsed -ge $timeout ]; then
+            echo "Timeout waiting for application to start."
+            docker logs test-container
+            docker stop test-container
+            exit 1
+          fi
+          sleep $interval
+          elapsed=$((elapsed + interval))
+          echo "Still waiting..."
+        done
+        echo "Application started!"
+        docker logs test-container # Keep logs for inspection
         docker exec test-container ls -la /app
         docker exec test-container ls -la /app/templates || echo "templates dir missing"
-        curl -v http://localhost:5000
+        echo "Running curl test..."
+        curl -v http://localhost:5000 # Now run the actual test curl
         docker stop test-container
+
 
   deploy:
     needs: build-and-test
