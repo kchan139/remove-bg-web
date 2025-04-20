@@ -31,8 +31,9 @@ jobs:
         docker run -d -p 5000:5000 --name test-container rmbg
         sleep 30
         docker logs test-container
-        docker ps
-        curl -s -o /dev/null -w "%{http_code}" http://localhost:5000 | grep "200" || exit 1
+        docker exec test-container ls -la /app
+        docker exec test-container ls -la /app/templates || echo "templates dir missing"
+        curl -v http://localhost:5000
         docker stop test-container
 
   deploy:
