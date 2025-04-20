@@ -33,12 +33,12 @@ jobs:
       run: |
         docker rm -f test-container || true
         
-        docker run -d -p 5000:5000 --name test-container rmbg
+        docker run -d -p 8080:8080 --name test-container rmbg
         echo "Waiting for application to start..."
         timeout=60 # Maximum wait time in seconds
         interval=2 # Check every 2 seconds
         elapsed=0
-        while ! curl -sf http://localhost:5000 > /dev/null; do
+        while ! curl -sf http://localhost:8080 > /dev/null; do
           if [ $elapsed -ge $timeout ]; then
             echo "Timeout waiting for application to start."
             docker logs test-container
@@ -54,9 +54,8 @@ jobs:
         docker exec test-container ls -la /app
         docker exec test-container ls -la /app/templates || echo "templates dir missing"
         echo "Running curl test..."
-        curl -v http://localhost:5000 # Now run the actual test curl
+        curl -v http://localhost:8080 # Now run the actual test curl
         docker stop test-container
-
 
   deploy:
     needs: build-and-test
@@ -76,15 +75,44 @@ jobs:
       uses: 'google-github-actions/setup-gcloud@v1'
       
     - name: Build and push Docker image to Artifact Registry
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_REGION: ${{ secrets.GCP_REGION }}
+        REPOSITORY: rmbg
+        IMAGE_NAME: rmbg
       run: |
-        gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
-        docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/rmbg:${{ github.sha }} .
-        docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/rmbg:${{ github.sha }}
+        # Configure Docker for Artifact Registry
+        gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev --quiet
+        
+        # Build Docker image with both tag types for better versioning
+        IMAGE_PATH="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}"
+        echo "Building image: ${IMAGE_PATH}:${GITHUB_SHA} and ${IMAGE_PATH}:latest"
+        docker build -t "${IMAGE_PATH}:${GITHUB_SHA}" -t "${IMAGE_PATH}:latest" .
+        
+        # Push to Artifact Registry
+        echo "Pushing images to Artifact Registry"
+        docker push "${IMAGE_PATH}:${GITHUB_SHA}"
+        docker push "${IMAGE_PATH}:latest"
+        
+        # Save the image path for next step
+        echo "IMAGE_PATH=${IMAGE_PATH}" >> $GITHUB_ENV
     
     - name: Deploy to Cloud Run
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_REGION: ${{ secrets.GCP_REGION }}
       run: |
         gcloud run deploy rmbg \
-          --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/rmbg:${{ github.sha }} \
+          --image=${IMAGE_PATH}:${GITHUB_SHA} \
           --platform=managed \
-          --region=${{ secrets.GCP_REGION }} \
-          --allow-unauthenticated
+          --region=${GCP_REGION} \
+          --memory=2Gi \
+          --cpu=1 \
+          --concurrency=80 \
+          --timeout=300s \
+          --port=8080 \
+          --allow-unauthenticated \
+          --project=${GCP_PROJECT_ID} \
+          --service-account=816798149971-compute@developer.gserviceaccount.com \
+          --set-annotations=autoscaling.knative.dev/maxScale=3 \
+          --set-annotations=run.googleapis.com/startup-cpu-boost=true
