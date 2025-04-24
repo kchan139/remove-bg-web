@@ -31,7 +31,7 @@ jobs:
         docker build -t rmbg .
         docker rm -f test-container || true
         
-        docker run -d -p 8080:8080 --name test-container rmbg
+        docker run --rm -d -p 8080:8080 --name test-container rmbg
         echo "Waiting for application to start..."
         timeout=60 # Maximum wait time in seconds
         interval=2 # Check every 2 seconds
