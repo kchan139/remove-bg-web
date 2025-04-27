@@ -71,6 +71,15 @@ jobs:
     
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
+
+    - name: Create Artifact Registry repository (if it does not exist)
+      env:
+        GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        GCP_REGION: ${{ secrets.GCP_REGION }}
+        REPOSITORY: rmbg
+      run: |
+        gcloud artifacts repositories list --location=${GCP_REGION} --project=${GCP_PROJECT_ID} --filter="name:projects/${GCP_PROJECT_ID}/locations/${GCP_REGION}/repositories/${REPOSITORY}" --format="value(name)" | grep -q "${REPOSITORY}" || \
+        gcloud artifacts repositories create ${REPOSITORY} --repository-format=docker --location=${GCP_REGION} --project=${GCP_PROJECT_ID} --description="Docker repository for rmbg service"
       
     - name: Build and push Docker image to Artifact Registry
       env:
