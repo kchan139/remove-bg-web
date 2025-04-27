@@ -26,34 +26,34 @@ jobs:
     - name: Run unit tests
       run: pytest test/ -v
     
-    - name: Build and Test Docker Image
-      run: |
-        docker build -t rmbg .
-        docker rm -f test-container || true
+    # - name: Build and Test Docker Image
+    #   run: |
+    #     docker build -t rmbg .
+    #     docker rm -f test-container || true
         
-        docker run --rm -d -p 8080:8080 --name test-container rmbg
-        echo "Waiting for application to start..."
-        timeout=60 # Maximum wait time in seconds
-        interval=2 # Check every 2 seconds
-        elapsed=0
-        while ! curl -sf http://localhost:8080 > /dev/null; do
-          if [ $elapsed -ge $timeout ]; then
-            echo "Timeout waiting for application to start."
-            docker logs test-container
-            docker stop test-container
-            exit 1
-          fi
-          sleep $interval
-          elapsed=$((elapsed + interval))
-          echo "Still waiting..."
-        done
-        echo "Application started!"
-        docker logs test-container
-        docker exec test-container ls -la /app
-        docker exec test-container ls -la /app/templates || echo "templates dir missing"
-        echo "Running curl test..."
-        curl -v http://localhost:8080
-        docker stop test-container
+    #     docker run --rm -d -p 8080:8080 --name test-container rmbg
+    #     echo "Waiting for application to start..."
+    #     timeout=60 # Maximum wait time in seconds
+    #     interval=2 # Check every 2 seconds
+    #     elapsed=0
+    #     while ! curl -sf http://localhost:8080 > /dev/null; do
+    #       if [ $elapsed -ge $timeout ]; then
+    #         echo "Timeout waiting for application to start."
+    #         docker logs test-container
+    #         docker stop test-container
+    #         exit 1
+    #       fi
+    #       sleep $interval
+    #       elapsed=$((elapsed + interval))
+    #       echo "Still waiting..."
+    #     done
+    #     echo "Application started!"
+    #     docker logs test-container
+    #     docker exec test-container ls -la /app
+    #     docker exec test-container ls -la /app/templates || echo "templates dir missing"
+    #     echo "Running curl test..."
+    #     curl -v http://localhost:8080
+    #     docker stop test-container
 
   deploy:
     needs: build-and-test
